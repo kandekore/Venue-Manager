@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Venue Manager
  * Description: Professional venue post type with clean templates and Font Awesome icons.
- * Version: 1.0.1
+ * Version: 1.1.0
  * Author: Darren Kandekore
  */
 
@@ -106,36 +106,53 @@ function vm_fields($post) {
     wp_nonce_field('vm_save', 'vm_nonce');
 
     $fields = [
-        'logo' => 'Venue Logo',
-        'address' => 'Address',
-        'lat' => 'Latitude',
-        'lng' => 'Longitude',
-        'phone' => 'Telephone',
-        'email' => 'Email',
-            'website' => 'Website URL', 
-
-        'facebook' => 'Facebook URL',
-        'instagram' => 'Instagram URL',
-        'x' => 'X (Twitter) URL',
+        'logo'        => 'Venue Logo',
+        'address'     => 'Address',
+        'lat'         => 'Latitude',
+        'lng'         => 'Longitude',
+        'phone'       => 'Telephone',
+        'email'       => 'Email',
+        'website'     => 'Website URL',
+        'facebook'    => 'Facebook URL',
+        'instagram'   => 'Instagram URL',
+        'x'           => 'X (Twitter) URL',
         'tripadvisor' => 'TripAdvisor URL',
-        'gallery' => 'Gallery'
+        'gallery'     => 'Gallery'
     ];
 
     foreach ($fields as $key => $label) {
+
         $value = get_post_meta($post->ID, "vm_$key", true);
 
-        if (in_array($key, ['logo','gallery'])) {
-            echo "<p><strong>$label</strong><br>
-            <input type='hidden' id='vm_$key' name='vm_$key' value='".esc_attr($value)."'>
-            <button type="button" class="button vm-media" data-target="vm_<?php echo esc_attr($key); ?>">
-    Select <?php echo esc_html($label); ?>
-</button>
+        echo '<p><strong>' . esc_html($label) . '</strong><br>';
+
+        // Logo & Gallery (media picker)
+        if (in_array($key, ['logo', 'gallery'], true)) {
+
+            echo '<input type="hidden"
+                        id="vm_' . esc_attr($key) . '"
+                        name="vm_' . esc_attr($key) . '"
+                        value="' . esc_attr($value) . '">';
+
+            echo '<button type="button"
+                        class="button vm-media"
+                        data-target="vm_' . esc_attr($key) . '">
+                        Select ' . esc_html($label) . '
+                  </button>';
+
+        // Standard text fields
         } else {
-            echo "<p><strong>$label</strong><br>
-            <input type='text' style='width:100%' name='vm_$key' value='".esc_attr($value)."'></p>";
+
+            echo '<input type="text"
+                        style="width:100%"
+                        name="vm_' . esc_attr($key) . '"
+                        value="' . esc_attr($value) . '">';
         }
+
+        echo '</p>';
     }
 }
+
 
 add_action('save_post_venues', function ($post_id) {
     if (!isset($_POST['vm_nonce']) || !wp_verify_nonce($_POST['vm_nonce'], 'vm_save')) return;
