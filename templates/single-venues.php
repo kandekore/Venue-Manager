@@ -1,4 +1,6 @@
 <?php get_header(); ?>
+<div id="Content">
+
 
 <div class="section venue-single">
 <div class="wrap mcb-wrap">
@@ -29,6 +31,16 @@ href="https://www.google.com/maps/dir/?api=1&destination=<?= urlencode($address)
 <p><i class="fa fa-envelope"></i> <a href="mailto:<?= esc_attr($email) ?>"><?= esc_html($email) ?></a></p>
 <?php endif; ?>
 
+<?php if ($website = get_post_meta(get_the_ID(),'vm_website',true)) : ?>
+<p>
+    <i class="fa fa-globe"></i>
+    <a href="<?= esc_url($website) ?>" target="_blank" rel="noopener">
+        <?= esc_html(parse_url($website, PHP_URL_HOST)) ?>
+    </a>
+</p>
+<?php endif; ?>
+
+
 </div>
 
 <div class="venue-socials">
@@ -49,6 +61,6 @@ echo '</div>';
 endif;
 ?>
 
-</div></div></div>
+</div></div></div></div>
 
 <?php get_footer(); ?>

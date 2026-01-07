@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Venue Manager
  * Description: Professional venue post type with clean templates and Font Awesome icons.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: Darren Kandekore
  */
 
@@ -112,6 +112,8 @@ function vm_fields($post) {
         'lng' => 'Longitude',
         'phone' => 'Telephone',
         'email' => 'Email',
+            'website' => 'Website URL', 
+
         'facebook' => 'Facebook URL',
         'instagram' => 'Instagram URL',
         'x' => 'X (Twitter) URL',
@@ -125,7 +127,9 @@ function vm_fields($post) {
         if (in_array($key, ['logo','gallery'])) {
             echo "<p><strong>$label</strong><br>
             <input type='hidden' id='vm_$key' name='vm_$key' value='".esc_attr($value)."'>
-            <button class='button vm-media' data-target='vm_$key'>Select</button></p>";
+            <button type="button" class="button vm-media" data-target="vm_<?php echo esc_attr($key); ?>">
+    Select <?php echo esc_html($label); ?>
+</button>
         } else {
             echo "<p><strong>$label</strong><br>
             <input type='text' style='width:100%' name='vm_$key' value='".esc_attr($value)."'></p>";
@@ -172,7 +176,8 @@ add_action('wp_head', function () {
         "@type" => "LocalBusiness",
         "name" => get_the_title(),
         "image" => get_the_post_thumbnail_url($id,'full'),
-        "url" => get_permalink(),
+        "url" => get_post_meta($id,'vm_website',true) ?: get_permalink(),
+
         "telephone" => get_post_meta($id,'vm_phone',true),
         "email" => get_post_meta($id,'vm_email',true),
         "address" => [

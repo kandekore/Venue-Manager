@@ -1,4 +1,5 @@
 <?php get_header(); ?>
+<div id="Content">
 
 <div class="section venue-archive">
 <div class="wrap mcb-wrap">
@@ -37,5 +38,5 @@ data-title="<?= esc_attr(get_the_title()) ?>">
 <?php endwhile; wp_reset_postdata(); ?>
 
 </div></div>
-
+</div>
 <?php get_footer(); ?>
