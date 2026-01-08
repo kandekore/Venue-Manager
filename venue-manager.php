@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Venue Manager
  * Description: Professional venue post type with clean templates and Font Awesome icons.
- * Version: 1.1.0
+ * Version: 1.1.1
  * Author: Darren Kandekore
  */
 
@@ -42,55 +42,58 @@ add_action('init', function () {
    ASSETS
 ====================================================== */
 
+// Front-end Assets
 add_action('wp_enqueue_scripts', function () {
+ // Load Font Awesome Pro Kit
+wp_enqueue_script(
+    'font-awesome-pro',
+    'https://kit.fontawesome.com/6654c52133.js',
+    [],
+    null,
+    false
+);
 
-    // Font Awesome
-    wp_enqueue_style(
-        'font-awesome',
-        'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css',
-        [],
-        '6.5.1'
-    );
+// Add the required 'crossorigin' attribute to the script tag
+add_filter('script_loader_tag', function ($tag, $handle) {
+    if ('font-awesome-pro' !== $handle) return $tag;
+    return str_replace(' src', ' crossorigin="anonymous" src', $tag);
+}, 10, 2);
 
-    // Plugin styles
+    // 2. Slick Slider Assets
+    wp_enqueue_style('slick-css', 'https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css');
+    wp_enqueue_script('slick-js', 'https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js', ['jquery'], null, true);
+
+    // 3. PhotoSwipe Assets (Lightbox)
+    wp_enqueue_style('photoswipe', 'https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe.min.css');
+    wp_enqueue_style('photoswipe-skin', 'https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/default-skin/default-skin.min.css');
+    wp_enqueue_script('photoswipe-js', 'https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe.min.js', [], null, true);
+    wp_enqueue_script('photoswipe-ui', 'https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe-ui-default.min.js', [], null, true);
+
+    // 4. Plugin styles (Ensuring it depends on Font Awesome)
     wp_enqueue_style(
         'venue-css',
         VM_URL . 'assets/venue.css',
-        [],
-        '1.0.0'
+        ['font-awesome'], // This forces your CSS to load AFTER Font Awesome
+        '1.1.0'
     );
 
-    // Google Maps (only if API key exists)
+    // 5. JavaScript & Google Maps Logic
     $api_key = get_option('vm_google_maps_api_key');
-
+    $deps = ['jquery', 'slick-js', 'photoswipe-js'];
+    
     if (!empty($api_key)) {
+        wp_enqueue_script('google-maps', 'https://maps.googleapis.com/maps/api/js?key=' . esc_attr($api_key), [], null, true);
+        $deps[] = 'google-maps';
+    }
 
-        wp_enqueue_script(
-            'google-maps',
-            'https://maps.googleapis.com/maps/api/js?key=' . esc_attr($api_key),
-            [],
-            null,
-            true
-        );
-
-        wp_enqueue_script(
-            'venue-js',
-            VM_URL . 'assets/venue.js',
-            ['jquery', 'google-maps'],
-            '1.0.0',
-            true
-        );
-
-    } else {
-
-        // Load venue.js without maps support (safe fallback)
-        wp_enqueue_script(
-            'venue-js',
-            VM_URL . 'assets/venue.js',
-            ['jquery'],
-            '1.0.0',
-            true
-        );
+    wp_enqueue_script('venue-js', VM_URL . 'assets/venue.js', $deps, '1.1.0', true);
+});
+// Admin Assets (Fixes the Media Library)
+add_action('admin_enqueue_scripts', function ($hook) {
+    global $post;
+    if ( ( $hook == 'post-new.php' || $hook == 'post.php' ) && 'venues' === $post->post_type ) {
+        wp_enqueue_media(); // Required for the media picker to pop up
+        wp_enqueue_script('venue-js', VM_URL . 'assets/venue.js', ['jquery'], '1.0.1', true);
     }
 });
 
@@ -155,12 +158,38 @@ function vm_fields($post) {
 
 
 add_action('save_post_venues', function ($post_id) {
+    // 1. Basic security and saving of text fields
     if (!isset($_POST['vm_nonce']) || !wp_verify_nonce($_POST['vm_nonce'], 'vm_save')) return;
+    
     foreach ($_POST as $k => $v) {
-        if (strpos($k, 'vm_') === 0) update_post_meta($post_id, $k, sanitize_text_field($v));
+        if (strpos($k, 'vm_') === 0) {
+            update_post_meta($post_id, $k, sanitize_text_field($v));
+        }
+    }
+
+    // 2. Automated Geocoding Logic
+    $address = get_post_meta($post_id, 'vm_address', true);
+    $api_key = get_option('vm_google_maps_api_key');
+
+    if (!empty($address) && !empty($api_key)) {
+        // Fetch coordinates from Google
+        $url = "https://maps.googleapis.com/maps/api/geocode/json?address=" . urlencode($address) . "&key=" . esc_attr($api_key);
+        $response = wp_remote_get($url);
+
+        if (!is_wp_error($response)) {
+            $body = json_decode(wp_remote_retrieve_body($response), true);
+
+            if ($body['status'] === 'OK') {
+                $lat = $body['results'][0]['geometry']['location']['lat'];
+                $lng = $body['results'][0]['geometry']['location']['lng'];
+
+                // Automatically update the hidden Lat/Lng fields
+                update_post_meta($post_id, 'vm_lat', $lat);
+                update_post_meta($post_id, 'vm_lng', $lng);
+            }
+        }
     }
 });
-
 /* ======================================================
    TEMPLATE LOADER
 ====================================================== */
