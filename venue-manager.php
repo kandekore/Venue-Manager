@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Venue Manager
  * Description: Professional venue post type with clean templates and Font Awesome icons.
- * Version: 1.1.1
+ * Version: 1.3.0
  * Author: Darren Kandekore
  */
 
@@ -245,9 +245,8 @@ add_action('wp_head', function () {
 
     echo '<script type="application/ld+json">'.json_encode($schema).'</script>';
 });
-
 /* ======================================================
-   ADMIN SETTINGS – GOOGLE MAPS API KEY
+   ADMIN SETTINGS – GOOGLE MAPS API KEY & DEFAULTS
 ====================================================== */
 
 add_action('admin_menu', function () {
@@ -276,8 +275,9 @@ function vm_settings_page() {
 }
 
 add_action('admin_init', function () {
-
     register_setting('vm_settings', 'vm_google_maps_api_key');
+    register_setting('vm_settings', 'vm_default_lat');
+    register_setting('vm_settings', 'vm_default_lng');
 
     add_settings_section(
         'vm_maps_section',
@@ -293,13 +293,38 @@ add_action('admin_init', function () {
         'venue-manager-settings',
         'vm_maps_section'
     );
+
+    add_settings_field(
+        'vm_default_lat',
+        'Default Center Latitude',
+        'vm_lat_field',
+        'venue-manager-settings',
+        'vm_maps_section'
+    );
+
+    add_settings_field(
+        'vm_default_lng',
+        'Default Center Longitude',
+        'vm_lng_field',
+        'venue-manager-settings',
+        'vm_maps_section'
+    );
 });
+
+// ONLY KEEP ONE COPY OF THESE FUNCTIONS BELOW:
 
 function vm_maps_key_field() {
     $key = esc_attr(get_option('vm_google_maps_api_key'));
     echo "<input type='text' name='vm_google_maps_api_key' value='$key' style='width:400px'>";
-    echo "<p class='description'>
-        Enter your Google Maps JavaScript API key.<br>
-        Required for map-based venue archive.
-    </p>";
+    echo "<p class='description'>Enter your Google Maps JavaScript API key.</p>";
+}
+
+function vm_lat_field() {
+    $lat = esc_attr(get_option('vm_default_lat', '52.4862')); 
+    echo "<input type='text' name='vm_default_lat' value='$lat' style='width:150px'>";
+}
+
+function vm_lng_field() {
+    $lng = esc_attr(get_option('vm_default_lng', '-1.8904')); 
+    echo "<input type='text' name='vm_default_lng' value='$lng' style='width:150px'>";
 }

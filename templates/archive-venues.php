@@ -20,7 +20,10 @@
             </form>
         </header>
 
-        <div id="venue-map"></div>
+        <div id="venue-map" 
+             data-default-lat="<?php echo esc_attr(get_option('vm_default_lat', '52.4862')); ?>" 
+             data-default-lng="<?php echo esc_attr(get_option('vm_default_lng', '-1.8904')); ?>">
+        </div>
 
         <div class="venue-grid">
             <?php
@@ -33,15 +36,20 @@
 
             if ($q->have_posts()) :
                 while ($q->have_posts()) : $q->the_post();
-                    $lat   = get_post_meta(get_the_ID(), 'vm_lat', true);
-                    $lng   = get_post_meta(get_the_ID(), 'vm_lng', true);
-                    $address = get_post_meta(get_the_ID(), 'vm_address', true);
+                    $id      = get_the_ID();
+                    $lat     = get_post_meta($id, 'vm_lat', true);
+                    $lng     = get_post_meta($id, 'vm_lng', true);
+                    $address = get_post_meta($id, 'vm_address', true);
+                    $logo_id = get_post_meta($id, 'vm_logo', true);
+                    $logo_url = $logo_id ? wp_get_attachment_image_url($logo_id, 'thumbnail') : '';
                     ?>
 
                     <div class="venue-card" 
                          data-lat="<?php echo esc_attr($lat); ?>" 
                          data-lng="<?php echo esc_attr($lng); ?>" 
-                         data-title="<?php echo esc_attr(get_the_title()); ?>">
+                         data-title="<?php echo esc_attr(get_the_title()); ?>"
+                         data-link="<?php the_permalink(); ?>"
+                         data-logo="<?php echo esc_url($logo_url); ?>">
                         
                         <?php if (has_post_thumbnail()) : ?>
                             <div class="venue-card-image">
@@ -50,16 +58,20 @@
                         <?php endif; ?>
 
                         <div class="venue-card-content">
-                               <?php
-                                $logo = get_post_meta(get_the_ID(), 'vm_logo', true);
-                                if ($logo) {
-                                    echo wp_get_attachment_image($logo, 'medium', false, ['class' => 'venue-sidebar-logo']);
-                                }
-                                ?>
-                            <h3><?php the_title(); ?></h3>
-                            <?php if($address): ?>
-                                <p class="venue-card-address"><i class="fa-solid fa-location-dot"></i> <?php echo esc_html($address); ?></p>
+                            <?php if ($logo_id) : ?>
+                                <div class="venue-card-logo">
+                                    <?php echo wp_get_attachment_image($logo_id, 'thumbnail', false, ['class' => 'venue-sidebar-logo']); ?>
+                                </div>
                             <?php endif; ?>
+
+                            <h3><?php the_title(); ?></h3>
+
+                            <?php if($address): ?>
+                                <p class="venue-card-address">
+                                    <i class="fa-solid fa-location-dot"></i> <?php echo esc_html($address); ?>
+                                </p>
+                            <?php endif; ?>
+
                             <a class="vm-btn btn-full" href="<?php the_permalink(); ?>">View Details</a>
                         </div>
                     </div>

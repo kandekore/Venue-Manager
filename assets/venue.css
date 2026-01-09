@@ -169,7 +169,7 @@
 }
 
 .venue-card {
-    width: 90%;
+    width: 100%;
     background: #fff;
     border-radius: 12px;
     overflow: hidden;
@@ -186,7 +186,7 @@
 }.venue-card-content { padding: 20px; }
 
 #venue-map {
-    width: 90% !important;
+    width: 100% !important;
     height: 450px !important;
     min-height: 450px;
     display: block;
@@ -209,8 +209,10 @@
     font-size: 30px;
 }
 p.venue-card-address {
-    text-align: center;
-        font-size: 12px;
+text-align: center;
+    font-size: 12px;
+    color: #666;
+    margin: 5px 0;
 
 }
 /* ======================================================
